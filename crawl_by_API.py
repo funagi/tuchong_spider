@@ -35,28 +35,28 @@ class Tuchong_Spider:
 		self.today = time.strftime("%Y-%m-%d")
 		self.username = ''
 		self.pwd = ''
-		print u'Spider initiated.'
+		log.info('Spider initiated')
 
 	#spider entrance
 	def start(self):
-		print u'Start Collecting the most recent %s photos from: %s' %(self.num_of_pic, self.my_url)
+		log.info('Start Collecting the most recent %s photos from: %s' %(self.num_of_pic, self.my_url))
 		html = self.get_html(self.my_url)
 		self.get_author(html)
 		self.init_site_id(html)
 		self.API += "/rest/sites/%s/posts/%s?limit=%s" %(self.site_id,self.today,self.num_of_pic)
-		#print '%s' %self.API
+		#log.debug('%s' %self.API)
 		photo_json_str = self.get_html(self.API)
 		level1_img_url_list = self.decode_level1_img_url_list_from_json(photo_json_str)
 		index = self.download_photos(level1_img_url_list)
 		if index < self.num_of_pic:
-			print 'The author only has %s photos, less than %s' %(index, self.num_of_pic)
-		print '%s photos saved in folder: %s.' %(index, self.folder)
+			log.info('The author only has %s photos, less than %s' %(index, self.num_of_pic))
+		log.info('%s photos saved in folder: %s.' %(index, self.folder))
 
 	#Download at most num_of_pic of the photos via the level1 urls to level2 urls
 	def download_photos(self, level1_img_url_list):
 		index = 1
 		for level1_img_url in level1_img_url_list:
-			#print u'Start extracting level 2 url from: ' + level1_img_url
+			#log.debug('Start extracting level 2 url from: ' + level1_img_url)
 			level2_img_url_list = self.extract_level2_img_url(level1_img_url)
 			for level2_img_url in level2_img_url_list:
 				if self.num_of_pic < index:
@@ -79,9 +79,9 @@ class Tuchong_Spider:
 
 	#Enter username and password 
 	def login(self):
-		print 'Please enter your username:'
+		log.info('Please enter your username:')
 		self.username = str(raw_input())
-		print 'Please enter your password:'
+		log.info('Please enter your password:')
 		self.pwd = str(raw_input())
 		pass
 
@@ -122,27 +122,14 @@ class Tuchong_Spider:
 		if not os.path.exists(self.folder):
 			os.makedirs(self.folder)
 		target = self.folder + os.sep + '%s' % file_name
-		print u'saving picture %s to %s' %(file_name,target)
+		log.info('saving picture %s to %s' %(file_name,target))
 		img = urllib.urlretrieve(img_url, target)
 		time.sleep(1)
 		return img
 
 if __name__ == '__main__':
-	print u"""
-	#---------------------------------------
-	#	ATTENTION: PHOTOS NEVER FOR COMMERCIAL USE. 
-	#	Copyright Reserved by authors.   
-	#
-	#	A spider for tuchong pictures: 
-	#	Collecting pictures of a specified author
-	#	Author: Tian Wang 
-	#   	https://github.com/annieqt/Tuchong-Spider
-	#	Date: 2015-09-15
-	#---------------------------------------
-	"""
-
-	parser = argparse.ArgumentParser(description = 'python template')
-	parser.add_argument('-u', action = 'store', dest = 'url', default = 'http://lucici.tuchong.com', type = str, help = 'site url')
+	parser = argparse.ArgumentParser(description = 'tuchong spider')
+	parser.add_argument('-u', action = 'store', dest = 'url', default = 'https://lucici.tuchong.com', type = str, help = 'site url')
 	parser.add_argument('-n', action = 'store', dest = 'num', default = 1, type = int, help = 'pic num')
 	arg = parser.parse_args()
 
