@@ -4,18 +4,25 @@
 #	Copyright Reserved by authors.   
 #
 #	A spider for tuchong pictures: 
-#   	Collecting pictures of a specified author
-#   	Author: Tian Wang
+#		Collecting pictures of a specified author
+#		Author: Tian Wang
 #	https://github.com/annieqt/Tuchong-Spider
-#   	Date: 2015-09-15
+#		Date: 2015-09-15
 #---------------------------------------
 import os
+import sys
 import time
 import string
 import json
 import urllib
 import urllib2
+import logging
+import argparse
 from bs4 import BeautifulSoup
+
+## debug, info, warnning, error, critical
+logging.basicConfig(level = logging.DEBUG, format = "%(levelname)s %(asctime)s [%(filename)s][%(lineno)d][%(funcName)s] %(message)s")
+log = logging.getLogger()
 
 class Tuchong_Spider:
 	#Init initial url and folder to save photos
@@ -36,7 +43,7 @@ class Tuchong_Spider:
 		html = self.get_html(self.my_url)
 		self.get_author(html)
 		self.init_site_id(html)
-		self.API += "/rest/sites/%s/posts/%s?limit=%s" %(self.site_id,self.today,self.num_of_pic)	
+		self.API += "/rest/sites/%s/posts/%s?limit=%s" %(self.site_id,self.today,self.num_of_pic)
 		#print '%s' %self.API
 		photo_json_str = self.get_html(self.API)
 		level1_img_url_list = self.decode_level1_img_url_list_from_json(photo_json_str)
@@ -50,7 +57,7 @@ class Tuchong_Spider:
 		index = 1
 		for level1_img_url in level1_img_url_list:
 			#print u'Start extracting level 2 url from: ' + level1_img_url
-			level2_img_url_list = self.extract_level2_img_url(level1_img_url)	
+			level2_img_url_list = self.extract_level2_img_url(level1_img_url)
 			for level2_img_url in level2_img_url_list:
 				if self.num_of_pic < index:
 					return index-1
@@ -62,12 +69,12 @@ class Tuchong_Spider:
 	def get_html(self, url):
 		req = urllib2.Request(url)
 		try:
-		    handle = urllib2.urlopen(req)
-		    html = handle.read()
+			handle = urllib2.urlopen(req)
+			html = handle.read()
 		except IOError, e:
-		    if hasattr(e, 'code'):
-		        if e.code == 401:
-		        	html = ""
+			if hasattr(e, 'code'):
+				if e.code == 401:
+					html = ""
 		return html
 
 	#Enter username and password 
@@ -83,7 +90,7 @@ class Tuchong_Spider:
 		soup = BeautifulSoup(html, 'html.parser')
 		profile = soup.find("div", attrs={"class":"profile-name"})
 		author = profile.h2.get_text().strip()
-		self.folder ='photos\\%s' % author
+		self.folder ='photos' + os.sep + '%s' % author
 
 	#Get site_id that specify an author
 	def init_site_id(self, html):
@@ -114,13 +121,12 @@ class Tuchong_Spider:
 		file_name = str(index) +'.jpg'
 		if not os.path.exists(self.folder):
 			os.makedirs(self.folder)
-		target = self.folder +'\\%s' % file_name
+		target = self.folder + os.sep + '%s' % file_name
 		print u'saving picture %s to %s' %(file_name,target)
 		img = urllib.urlretrieve(img_url, target)
 		time.sleep(1)
 		return img
 
-		pass
 if __name__ == '__main__':
 	print u"""
 	#---------------------------------------
@@ -135,12 +141,13 @@ if __name__ == '__main__':
 	#---------------------------------------
 	"""
 
-	print u'please enter the url of the author''s mainpage. \n eg: annieqt.tuchong.com'
-	url = str(raw_input())
-	url = url if url.startswith('http') else 'http://%s' % url
+	parser = argparse.ArgumentParser(description = 'python template')
+	parser.add_argument('-u', action = 'store', dest = 'url', default = 'http://lucici.tuchong.com', type = str, help = 'site url')
+	parser.add_argument('-n', action = 'store', dest = 'num', default = 1, type = int, help = 'pic num')
+	arg = parser.parse_args()
 
-	print u'please enter the number of the photo you want to download at most. eg: 200:'
-	num_of_pic = str(raw_input())
+	spider = Tuchong_Spider(arg.url, arg.num)
+	spider.start()
 
-	mySpider = Tuchong_Spider(url, num_of_pic)
-	mySpider.start()
+	sys.exit(0)
+
