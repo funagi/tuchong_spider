@@ -48,6 +48,8 @@ class Tuchong_Spider:
 	## get pics url list
 	def parse_post(self, post_url):
 		html = self.get_content(post_url)
+		if html == '':
+			return ''
 		'''
 		html content ex:
 		<img src="https://photo.tuchong.com/990878/f/13914842.jpg" class="img-responsive copyright-contextmenu" data-copyright="&copy;版权所有" alt="" />
