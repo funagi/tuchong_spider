@@ -28,6 +28,8 @@ log = logging.getLogger()
 
 class Tuchong_Spider:
 	def __init__(self, url, num):
+		if url.endswith('/'):
+			url = url[:-1]
 		self.url = url
 		self.num = num
 		self.author = ''
@@ -70,10 +72,10 @@ class Tuchong_Spider:
 		target = path + os.sep + str(post_id) + '_' + str(index) + '.jpg'
 		log.info('saving picture %s' % (target))
 
-## 		img = urlopen(url).read()
-## 		out = open(target, 'wb')
-## 		out.write(img)
-## 		out.close()
+		img = urlopen(url).read()
+		out = open(target, 'wb')
+		out.write(img)
+		out.close()
 
 	#spider entrance
 	def start_site(self):
