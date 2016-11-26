@@ -5,9 +5,9 @@ A Simple spider for crawling photos of a specified author's **TuBlog** from [Tuc
 Based on Python 2.7.9.
 
 ###Guide
-1. Input the url of the author's **TuBlog**, eg: http://annieqt.tuchong.com/.
-2. Input the maximum number of photos you want to download.
-3. Find the photos under file directory. Photos from different authors will be stored separately.
+```bash
+python ./crawl_by_API.py -h
+```
 
 ###Note
 Some photos require a user to login to be viewed. These photos are ignored for simplicity. :P But in next version  the feature may be imporved.
