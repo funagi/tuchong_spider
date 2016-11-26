@@ -29,11 +29,8 @@ log = logging.getLogger()
 class Tuchong_Spider:
 	def __init__(self, url, num):
 		self.url = url
-		self.num = int(num)
+		self.num = num
 		self.author = ''
-		self.site_id = ''
-		self.api = ''
-		self.today = ''
 
 	## get html content of an url
 	def get_content(self, url):
@@ -45,18 +42,6 @@ class Tuchong_Spider:
 			log.error('download %s error' % (url))
 
 		return content
-
-	def init(self):
-		soup = bs(self.get_content(self.url), 'html.parser')
-
-		profile = soup.find("div", attrs={"class":"profile-name"})
-		self.author = profile.h2.get_text().strip()
-
-		post_collages = soup.find("div", attrs={"class":"post-collages"})
-		self.site_id = post_collages.get('data-site-id')
-
-		self.today = time.strftime("%Y-%m-%d")
-		self.api = 'http://tuchong.com' + '/rest/sites/%s/posts/%s?limit=%s' %(self.site_id, self.today, self.num)
 
 	## get pics url list
 	def parse_post(self, post_url):
@@ -70,6 +55,9 @@ class Tuchong_Spider:
 		pics = []
 		for pic in soup.find_all("img", attrs = {"class":"img-responsive copyright-contextmenu"}):
 			pics.append(pic.get('src'))
+
+		author = soup.find('meta', attrs = {'name':'author'})['content']
+		self.author = author
 
 		log.info('post %s contains %d pics' % (post_url, len(pics)))
 		return pics
@@ -89,12 +77,21 @@ class Tuchong_Spider:
 
 	#spider entrance
 	def start_site(self):
-		log.info('Collecting the most recent %s posts from site %s' % (self.num, self.url))
+		log.info('Collecting the most recent %s post(s) from site %s' % (self.num, self.url))
 
-		self.init()
+		## get author and site_id
+		soup = bs(self.get_content(self.url), 'html.parser')
+
+		profile = soup.find("div", attrs={"class":"profile-name"})
+		self.author = profile.h2.get_text().strip()
+
+		post_collages = soup.find("div", attrs={"class":"post-collages"})
+		site_id = post_collages.get('data-site-id')
 
 		## get posts info
-		posts_json_str = self.get_content(self.api)
+		today = time.strftime("%Y-%m-%d")
+		api = 'http://tuchong.com' + '/rest/sites/%s/posts/%s?limit=%s' %(site_id, today, self.num)
+		posts_json_str = self.get_content(api)
 		'''
 		a json string, contains the folloing fields
 		{
@@ -134,9 +131,8 @@ class Tuchong_Spider:
 		log.info('total pics: %s' % (str(total)))
 
 	def start_post(self):
-		log.info('Collecting the most recent %s photos from post: %s' % (self.num, self.url))
+		log.info('Collecting all photos from post: %s' % (self.url))
 
-		self.init()
 		post_id = self.url.split('/')[-1]
 
 		i = 0
@@ -150,14 +146,14 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description = 'tuchong spider')
 	parser.add_argument('-t', action = 'store', dest = 'type', default = 'site', type = str, help = 'url type: site|post')
 	parser.add_argument('-u', action = 'store', dest = 'url', default = 'https://lucici.tuchong.com', type = str, help = 'url')
-	parser.add_argument('-n', action = 'store', dest = 'num', default = 1, type = int, help = 'num')
+	parser.add_argument('-n', action = 'store', dest = 'num', default = 1, type = int, help = 'num of posts, used when type is site')
 	arg = parser.parse_args()
 
 	spider = Tuchong_Spider(arg.url, arg.num)
 	if arg.type == "site":
 		spider.start_site()
 	elif arg.type == "post":
-		spider.start_site()
+		spider.start_post()
 	else:
 		log.fatal('%s not supported' % (arg.type))
 
