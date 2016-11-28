@@ -120,7 +120,7 @@ class Tuchong_Spider:
 			]
 		}
 		'''
-		parsed_json = json.loads(posts_json_str)
+		parsed_json = json.loads(posts_json_str.decode('utf-8')) ## add utf-8 for python3
 		posts = parsed_json['posts']
 
 		total = 0
